@@ -25,7 +25,7 @@ http://localhost:3000
 
 To process and import data:
 
-`curl -i -X POST -H "Content-Type: multipart/form-data" -F "import_file=YouFileHere"  'http://localhost:3000/api/v1/dictionaries/import'`
+`curl -i -X POST -H "Content-Type: multipart/form-data" -F "import_file=@{YouFileHere}"  'http://localhost:3000/api/v1/dictionaries/import'`
 
 * Replace YouFileHere with the full file path
 
