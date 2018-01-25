@@ -6,26 +6,27 @@ class Dictionary < ActiveRecord::Base
     raise ArgumentError, 'No file passed' unless file
     file_data = file.read
     data = file_data.scan(/(?:(?<=\s)|(?<=^))(?=\S*[a-z])[A-z]+(?=\s|$)/).map(&:downcase)
-    match_data(data)
+    hashed_date = data.group_by {|name| name[0]}
+    match_data(hashed_date)
   end
 
   private
 
-  def self.match_data(data)
+  def self.match_data(hashed_date)
     result = []
-    data.each do |prefix|
-      matching_words = data.select{|w| w != prefix && w.starts_with?(prefix)}
-
-      # Remove the prefix and get the suffix words
-      suffixes = get_the_suffixes(matching_words, prefix)
-
-      suffixes.each do |suffix|
-        logger.info "Searching for suffix #{suffix}"
-        found_index = search(data,suffix)
-        if found_index
-          word_combo = "#{prefix.capitalize} + #{suffix.capitalize} = #{(prefix + suffix).capitalize}"
-          logger.info "Found the matching word: #{word_combo}"
-          result << find_or_create_by(word: word_combo)
+    hashed_date.each_key do |key|
+      values = hashed_date[key]
+      values.each do |value|
+        matching_words = hashed_date[key].select {|w| w != value && w.starts_with?(value)}
+        # Remove the prefix and get the suffix words
+        suffixes = get_the_suffixes(matching_words, value)
+        suffixes.each do |suffix|
+          puts "Searching for suffix #{suffix}"
+          found_index = search(hashed_date[suffix[0]], suffix)
+          if found_index
+            word_combo = "#{value.capitalize} + #{suffix.capitalize} = #{(value + suffix).capitalize}"
+            result << word_combo
+          end
         end
       end
     end
@@ -38,6 +39,8 @@ class Dictionary < ActiveRecord::Base
 
   # Since data is already sorted, applying binary sort
   def self.search(array, key)
+    return unless array || key
+    array.sort!
     low, high = 0, array.length - 1
     while low <= high
       mid = (low + high) >> 1
